@@ -6,7 +6,7 @@ PYPROJECT_TOML_TEMPLATE = """\
 # WARNING: Please don't edit this file. It was automatically generated.
 
 [build-system]
-requires = ["setuptools", "setuptools-scm", "winrt-sdk"]
+requires = ["setuptools", "setuptools-scm", "winrt-sdk"{extra_build_requires}]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -34,7 +34,7 @@ version = {{ file = "pywinrt-version.txt" }}{dependencies}{optional_dependencies
 {find_src}
 [tool.cibuildwheel]
 # use local winrt-sdk build dependency
-environment = {{ PYTHONPATH="{relative}/winrt-sdk/src" }}
+environment = {{ PYTHONPATH="{relative}/winrt-sdk/src{extra_python_path}" }}
 # don't install winrt-sdk from PyPI
 build-frontend = {{ name = "build", args = ["--skip-dependency-check", "--no-isolation"] }}
 # don't build for PyPy
@@ -143,6 +143,7 @@ def write_project_files(
 ) -> None:
     package_name = package_path.name
     relative_package_path = package_path.relative_to(PROJECTION_PATH)
+    relative = "/".join([".."] * len(relative_package_path.parts))
     has_requirements = (package_path / "requirements.txt").exists()
     has_all_requirements = (package_path / "all-requirements.txt").exists()
 
@@ -151,6 +152,9 @@ def write_project_files(
             PYPROJECT_TOML_TEMPLATE.format(
                 package_name=package_name,
                 module_name=module_name,
+                extra_build_requires=', "winrt-WindowsAppSDK"'
+                if package_name.startswith("winrt-Microsoft.")
+                else "",
                 extra_dynamic=(', "dependencies"' if has_requirements else "")
                 + (', "optional-dependencies"' if has_all_requirements else ""),
                 dependencies=DEPENDENCIES if has_requirements else "",
@@ -158,7 +162,10 @@ def write_project_files(
                 if has_all_requirements
                 else "",
                 find_src=FIND_SRC if (package_path / "src").exists() else "",
-                relative="/".join([".."] * len(relative_package_path.parts)),
+                relative=relative,
+                extra_python_path=f";{relative}/winrt-WindowsAppSDK/src"
+                if package_name.startswith("winrt-Microsoft.")
+                else "",
             )
         )
 
@@ -194,7 +201,8 @@ write_project_files(
 for package_path in chain(
     (PROJECTION_PATH / "interop").glob("winrt-*"),
     (PROJECTION_PATH).glob("winrt-Windows.*"),
-    [PROJECTION_PATH / "winrt-TestComponent"],
+    (PROJECTION_PATH).glob("winrt-Microsoft.*"),
+    [PROJECTION_PATH / "winrt-WindowsAppSDK", PROJECTION_PATH / "winrt-TestComponent"],
 ):
     namespace = package_path.name.removeprefix("winrt-")
     module_name = f"winrt.{winrt_ns_to_py_package(namespace)}"

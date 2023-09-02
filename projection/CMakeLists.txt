@@ -82,6 +82,7 @@ install(DIRECTORY "${WINRT_RUNTIME_PATH}/src/winrt/" DESTINATION "${PYWINRT_SITE
 
 if (PYWINRT_FULL_PROJECTION)
     file(GLOB packages CONFIGURE_DEPENDS "winrt-Windows.*")
+    file(GLOB app_packages CONFIGURE_DEPENDS "winrt-Microsoft.*")
     file(GLOB interop_packages CONFIGURE_DEPENDS "interop/winrt-Windows.*")
 else()
     # minimum set of packages required for unit tests
@@ -108,7 +109,7 @@ foreach(package ${packages} ${interop_packages})
     pywinrt_add_namespace_package(${package})
 
     # speed up builds by precompiling frequently used headers
-    if (package IN_LIST packages)
+    if (package IN_LIST packages OR package IN_LIST app_packages)
         if (NOT first_target)
             set(first_target ${package_target})
 
