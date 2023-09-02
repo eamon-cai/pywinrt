@@ -37,7 +37,7 @@ jobs:
           allow-prereleases: true
           architecture: ${{ matrix.architecture }}
       - name: configure
-        run: cmake -S projection -B _build/projection -DPYWINRT_FULL_PROJECTION=OFF -A ${{ matrix.vs-arch }}
+        run: cmake -S projection -B _build/projection -A ${{ matrix.vs-arch }}
       - name: build
         run: cmake --build _build/projection --config ${{ matrix.release-type }} --parallel --verbose
       - name: install
@@ -72,7 +72,7 @@ jobs:
             cmake:p
             python:p
       - name: configure
-        run: ${MINGW_PREFIX}/bin/cmake -S projection -B _build/projection -DPYWINRT_FULL_PROJECTION=OFF -DPython3_ROOT_DIR=${MINGW_PREFIX}
+        run: ${MINGW_PREFIX}/bin/cmake -S projection -B _build/projection -DPython3_ROOT_DIR=${MINGW_PREFIX}
       - name: build
         run: ${MINGW_PREFIX}/bin/cmake --build _build/projection --verbose
       - name: install
